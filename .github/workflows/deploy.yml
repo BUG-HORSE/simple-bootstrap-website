@@ -1,0 +1,37 @@
+name: Deploy Application via SSH
+
+on:
+  push:
+    branches:
+      - main  # Trigger de workflow alleen bij wijzigingen in de 'main' branch
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Stap 1: Checkout de broncode
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Stap 2: Kopieer de bestanden naar de server (indien nodig)
+      - name: Deploy files to server
+        uses: appleboy/scp-action@v0.1.6
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          source: "./*"  # Kopieer alle bestanden
+          target: "/path/to/your/project"  # Pad op de server
+
+      # Stap 3: Herstart de applicatie via SSH
+      - name: Restart application on server
+        uses: appleboy/ssh-action@v0.1.7
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          script: |
+            cd /path/to/your/project
+            docker-compose down
+            docker-compose up -d
